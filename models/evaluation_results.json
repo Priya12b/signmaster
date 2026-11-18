@@ -1,0 +1,40 @@
+{
+    "test_accuracy": 0.9453,
+    "test_samples": 750,
+    "num_classes": 26,
+    "architecture": "mobilenet_v2",
+    "classes": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z"
+    ],
+    "metrics": {
+        "macro_avg_precision": 0.9475,
+        "macro_avg_recall": 0.9454,
+        "macro_avg_f1_score": 0.945,
+        "weighted_avg_f1_score": 0.945
+    }
+}

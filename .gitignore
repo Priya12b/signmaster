@@ -1,3 +1,33 @@
-# Ignore virtual environments
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
 .venv/
 venv/
+env/
+
+# Dataset - keep locally, don't push to GitHub
+data/
+
+# Local database
+db.sqlite3
+
+# Debug logs
+*.log
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Django generated files
+staticfiles/
+
+# IDE files
+.vscode/
+
+# Temporary files
+*.tmp
+*.temp

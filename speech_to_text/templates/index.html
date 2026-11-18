@@ -1,113 +1,204 @@
-{% csrf_token %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>Speech to Text</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignMaster - Voice Speech Studio</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-            margin: 0;
-            flex-direction: column;
+        .mic-button-container {
+            position: relative;
+            display: inline-block;
+            margin: 24px 0;
         }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        h2 {
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
+        .mic-btn-main {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--sm-primary-gradient);
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            border-radius: 5px;
-            transition: 0.3s;
+            box-shadow: 0 8px 24px var(--sm-primary-glow);
+            transition: all var(--sm-transition-base);
+            z-index: 2;
+            position: relative;
         }
-        button:hover {
-            background-color: #45a049;
+        .mic-btn-main:hover {
+            transform: scale(1.06);
+            box-shadow: 0 12px 30px var(--sm-primary-glow);
         }
-        #result {
-            margin-top: 20px;
-            padding: 10px;
-            background: #e8f5e9;
-            border-radius: 5px;
-            font-size: 16px;
+        .mic-btn-main.recording {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            70% { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .transcription-box {
+            background: var(--sm-surface-subtle);
+            border: 1px solid var(--sm-border);
+            border-radius: var(--sm-radius-md);
+            padding: 20px;
+            min-height: 120px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--sm-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h2>Click to Record and Transcribe</h2>
-        <button onclick="transcribeSpeech()">🎤 Start Recording</button>
-        <p id="result">Your transcribed text will appear here...</p>
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
+
+    <div class="container py-4" style="max-width: 800px;">
+        <div class="sm-card text-center mb-4">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3 rounded-pill" style="background: var(--sm-primary-light); color: var(--sm-primary); font-size: 0.85rem; font-weight: 700;">
+                <i class="bi bi-mic-fill"></i>
+                <span>Audio Speech-to-Sign Engine</span>
+            </div>
+
+            <h2 class="fw-bold mb-2 text-dark">Voice Speech Studio</h2>
+            <p class="text-muted mb-4" style="max-width: 520px; margin: 0 auto;">
+                Speak into your microphone to transcribe English audio directly to text, then convert into animated Sign Language gestures.
+            </p>
+
+            <!-- Animated Mic Trigger -->
+            <div class="mic-button-container">
+                <button id="mic-btn" class="mic-btn-main" onclick="transcribeSpeech()" title="Click to start speech recognition">
+                    <i id="mic-icon" class="bi bi-mic"></i>
+                </button>
+            </div>
+            <div>
+                <span id="recording-status" class="sm-badge sm-badge-primary">Click Microphone to Speak</span>
+            </div>
+
+            <!-- Transcription Output Display -->
+            <div class="mt-4 text-start">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-bold mb-0 text-dark">Transcribed Output:</label>
+                    <div id="action-tools" class="d-flex gap-2" style="display: none !important;">
+                        <!-- Duplicate/Copy Transcribed Text Button -->
+                        <button type="button" class="sm-btn sm-btn-outline sm-btn-sm" onclick="copyTranscription(this)">
+                            <i class="bi bi-copy"></i>
+                            <span>Copy Text</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result" class="transcription-box">
+                    <span class="text-muted fst-italic">Your transcribed speech will appear here...</span>
+                </div>
+            </div>
+
+            <!-- Actions row -->
+            <div id="convert-actions" class="mt-4 pt-3 border-top d-flex justify-content-center gap-3" style="display: none !important;">
+                <button type="button" class="sm-btn sm-btn-primary sm-btn-lg" onclick="convertToSigns()">
+                    <i class="bi bi-translate"></i>
+                    <span>Convert to ASL Signs &rarr;</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Tips Card -->
+        <div class="sm-card">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle text-primary me-2"></i>Microphone Tips:</h6>
+            <ul class="text-muted small mb-0 ps-3">
+                <li>Ensure microphone permissions are granted in your browser settings.</li>
+                <li>Speak clearly at a normal conversational volume and pace.</li>
+                <li>Transcribed words will automatically be prepared for Sign Language translation.</li>
+            </ul>
+        </div>
     </div>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function getCSRFToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            return SignMaster.getCSRFToken();
         }
 
-function transcribeSpeech() {
-    document.getElementById("result").innerText = "Listening...";
+        let latestTranscribedText = "";
 
-    fetch('/speech/transcribe/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCSRFToken(), // Ensure CSRF token is included
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({}) // Ensure a valid body is sent
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            document.getElementById("result").innerText = "Error: " + data.error;
-        } else {
-            document.getElementById("result").innerText = data.transcribed_text;
-            sendToInputAPI(data.transcribed_text);  // Send to /input/ API
+        function transcribeSpeech() {
+            const resultBox = document.getElementById("result");
+            const micBtn = document.getElementById("mic-btn");
+            const micIcon = document.getElementById("mic-icon");
+            const statusBadge = document.getElementById("recording-status");
+            const actionTools = document.getElementById("action-tools");
+            const convertActions = document.getElementById("convert-actions");
+
+            micBtn.classList.add("recording");
+            micIcon.className = "bi bi-record-circle";
+            statusBadge.className = "sm-badge sm-badge-warning";
+            statusBadge.innerText = "Listening to audio input...";
+            resultBox.innerHTML = `<div class="d-flex align-items-center gap-2"><div class="spinner-border spinner-border-sm text-primary"></div><span>Listening and processing speech...</span></div>`;
+
+            fetch('/speech/transcribe/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                micBtn.classList.remove("recording");
+                micIcon.className = "bi bi-mic";
+
+                if (data.error) {
+                    statusBadge.className = "sm-badge sm-badge-danger";
+                    statusBadge.innerText = "Recording Failed";
+                    resultBox.innerHTML = `<span class="text-danger fw-semibold">Error: ${data.error}</span>`;
+                    SignMaster.showToast(data.error, 'danger');
+                } else {
+                    statusBadge.className = "sm-badge sm-badge-success";
+                    statusBadge.innerText = "Transcription Complete";
+                    latestTranscribedText = data.transcribed_text || "";
+                    resultBox.innerHTML = `<strong class="text-dark fs-5">"${latestTranscribedText}"</strong>`;
+
+                    actionTools.style.display = "flex";
+                    actionTools.style.setProperty("display", "flex", "important");
+                    convertActions.style.display = "flex";
+                    convertActions.style.setProperty("display", "flex", "important");
+
+                    SignMaster.showToast('Speech transcribed successfully!', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                micBtn.classList.remove("recording");
+                micIcon.className = "bi bi-mic";
+                statusBadge.className = "sm-badge sm-badge-danger";
+                statusBadge.innerText = "Connection Error";
+                resultBox.innerHTML = `<span class="text-danger">Failed to transcribe speech. Check microphone input.</span>`;
+                SignMaster.showToast('Failed to transcribe speech', 'danger');
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById("result").innerText = "Error transcribing speech.";
-    });
-    }
 
-    function sendToInputAPI(text) {
-        fetch('/input/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCSRFToken(),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text: text })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Input API response:", data);
-        })
-        .catch(error => {
-            console.error('Error sending to input API:', error);
-        });
-    }
+        function copyTranscription(btn) {
+            if (!latestTranscribedText) return;
+            SignMaster.copyToClipboard(latestTranscribedText, btn, 'Transcribed text copied!');
+        }
 
-
+        function convertToSigns() {
+            if (!latestTranscribedText) return;
+            window.location.href = `/text-to-sign/?text=${encodeURIComponent(latestTranscribedText)}`;
+        }
     </script>
 </body>
 </html>

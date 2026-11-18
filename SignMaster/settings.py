@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
-
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,13 +29,30 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@ae4&bce+z=#w$^cs68s&4=+=#hu*%ez2rycsjc+%x4-3@mq+7'
+# SECRET_KEY = 'django-insecure-@ae4&bce+z=#w$^cs68s&4=+=#hu*%ez2rycsjc+%x4-3@mq+7'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', 'testserver']
 
+# Security settings
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "local-development-only-key-not-for-production"
+)
+
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "testserver",
+]
+
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
 
 # Application definition
 
@@ -64,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'SignMaster.urls'
@@ -91,10 +109,10 @@ WSGI_APPLICATION = 'SignMaster.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 

@@ -1,122 +1,127 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Matching Game</title>
+    <title>SignMaster - ASL Word Matching Challenge</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f9f9f9;
-            padding: 20px;
+        .match-arena {
+            background: white;
+            border: 1px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
+            padding: 30px;
+            box-shadow: var(--sm-shadow-md);
+            max-width: 720px;
+            margin: 0 auto;
         }
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .game-container {
+        .match-grid {
             display: flex;
-            justify-content: center;
-            gap: 50px;
-            margin-top: 20px;
+            justify-content: space-around;
+            gap: 30px;
+            margin: 25px 0;
         }
-        .words, .images {
+        .word-drag-col, .dropzone-col {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
-        .word {
-            background-color: #007bff;
+        .word-chip {
+            background: var(--sm-primary-gradient);
             color: white;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: var(--sm-radius-md);
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: grab;
-            width: 120px;
+            box-shadow: var(--sm-shadow-sm);
             text-align: center;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
-            margin-bottom: 95px; 
+            user-select: none;
+            transition: all var(--sm-transition-fast);
         }
-        .word:hover {
-            transform: scale(1.1);
+        .word-chip:hover {
+            transform: scale(1.05);
+            box-shadow: var(--sm-shadow-md);
         }
-        .dropzone {
-            border: 2px dashed #007bff;
-            padding: 10px;
-            text-align: center;
+        .dropzone-box {
+            border: 2px dashed var(--sm-primary);
+            background: var(--sm-surface-subtle);
+            border-radius: var(--sm-radius-md);
             width: 150px;
             height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all var(--sm-transition-fast);
         }
-        .dropzone img {
-            width: 100px;
-        }
-        #result {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
-            color: #333;
-        }
-        #score-display {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 20px;
-            color: #007bff;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            background-color: #007bff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
+        .dropzone-box img {
+            max-width: 90px;
+            max-height: 90px;
+            object-fit: contain;
         }
     </style>
 </head>
-<body>
-    <h2>Match the Words with Their Signs</h2>
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
 
-    <div class="game-container">
-        <div class="words">
-            {% for question in questions %}
-                <p draggable="true" class="word" id="word{{ forloop.counter }}">{{ question.word }}</p>
-            {% endfor %}
+    <div class="container py-4" style="max-width: 800px;">
+        <div class="text-center mb-4">
+            <span class="sm-badge sm-badge-warning mb-2">Drag & Drop Game</span>
+            <h2 class="fw-bold text-dark mb-1">ASL Word Match Challenge</h2>
+            <p class="text-muted mb-3">Drag each word chip on the left and drop it into the matching gesture box on the right</p>
         </div>
 
-        <div class="images">
-            {% for question in questions %}
-                <div class="dropzone" data-word="word{{ forloop.counter }}">
-                    <img src="{{ question.image.url }}" alt="{{ question.word }} Sign">
+        <div class="match-arena text-center">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="sm-badge sm-badge-primary fs-6"><span id="score-display">Score: 0</span></span>
+                <a href="{% url 'word_match_leaderboard' %}" class="sm-btn sm-btn-outline sm-btn-sm">
+                    <i class="bi bi-trophy text-warning"></i>
+                    <span>Leaderboard</span>
+                </a>
+            </div>
+
+            <div class="match-grid">
+                <div class="word-drag-col">
+                    <div class="small fw-bold text-muted mb-1">DRAG WORDS:</div>
+                    {% for question in questions %}
+                        <div draggable="true" class="word-chip" id="word{{ forloop.counter }}">{{ question.word }}</div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+
+                <div class="dropzone-col">
+                    <div class="small fw-bold text-muted mb-1">DROP ON MATCHING SIGN:</div>
+                    {% for question in questions %}
+                        <div class="dropzone-box" data-word="word{{ forloop.counter }}">
+                            <img src="{{ question.image.url }}" alt="{{ question.word }} Sign">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="result" class="fw-bold mt-2" style="min-height: 28px;"></div>
+
+            <div class="d-flex justify-content-center gap-2 mt-4 pt-3 border-top">
+                <button type="button" class="sm-btn sm-btn-outline" onclick="window.location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span>Reset Game</span>
+                </button>
+                <button type="button" id="save-score-btn" class="sm-btn sm-btn-success">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Save Score to Leaderboard</span>
+                </button>
+            </div>
         </div>
     </div>
-    <p id="score-display">Score: 0</p>
-    <button onclick="window.location.href='/gamification/word-match-leaderboard/'">View Leaderboard</button>
-    <button id="save-score-btn">Save Score</button>
-    <p id="result"></p>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let score=0;
+        let score = 0;
         document.addEventListener("DOMContentLoaded", () => {
-            const words = document.querySelectorAll(".word");
-            const dropzones = document.querySelectorAll(".dropzone");
+            const words = document.querySelectorAll(".word-chip");
+            const dropzones = document.querySelectorAll(".dropzone-box");
             const result = document.getElementById("result");
 
             words.forEach(word => {
@@ -128,46 +133,54 @@
             dropzones.forEach(zone => {
                 zone.addEventListener("dragover", (event) => {
                     event.preventDefault();
+                    zone.style.borderColor = "#10B981";
+                    zone.style.backgroundColor = "#ECFDF5";
+                });
+
+                zone.addEventListener("dragleave", (event) => {
+                    zone.style.borderColor = "var(--sm-primary)";
+                    zone.style.backgroundColor = "var(--sm-surface-subtle)";
                 });
 
                 zone.addEventListener("drop", (event) => {
                     event.preventDefault();
+                    zone.style.borderColor = "var(--sm-primary)";
+                    zone.style.backgroundColor = "var(--sm-surface-subtle)";
+
                     const wordId = event.dataTransfer.getData("text");
                     const draggedWord = document.getElementById(wordId);
 
                     if (zone.dataset.word === wordId) {
                         zone.appendChild(draggedWord);
-                        draggedWord.style.backgroundColor = "green";
-                        result.innerText = "✅ Correct! Keep going!";
+                        draggedWord.style.background = "#10B981";
+                        draggedWord.style.cursor = "default";
+                        draggedWord.setAttribute("draggable", "false");
+                        result.innerHTML = `<span class="text-success">✅ Correct Match! Keep going!</span>`;
                         score++;
-                        document.getElementById("score-display").innerText=`Score:${score}`;
+                        document.getElementById("score-display").innerText = `Score: ${score}`;
                     } else {
-                        result.innerText = "❌ Try Again!";
+                        result.innerHTML = `<span class="text-danger">❌ Not a match. Try another sign!</span>`;
                     }
                 });
             });
         });
 
-// Save the score when the game ends
         document.getElementById("save-score-btn").addEventListener("click", () => {
-            const username = prompt("Enter your name for the leaderboard:", "Guest");
-            saveWordMatchScore(username, score);
+            const username = prompt("Enter your name for the leaderboard:", "Guest") || "Guest";
+            fetch("/gamification/save_score/", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": SignMaster.getCSRFToken()
+                },
+                body: JSON.stringify({ username: username, score: score, game_type: "word_match" })
+            })
+            .then(response => response.json())
+            .then(data => {
+                SignMaster.showToast("Score saved successfully to Leaderboard!", "success");
+            })
+            .catch(error => console.error("Error saving score:", error));
         });
-   
-
-    function saveWordMatchScore(username, score) {
-        fetch("http://127.0.0.1:8000/gamification/save_score/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: username, score: score, game_type: "word_match" })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message);
-            alert("Score saved successfully!");
-        })
-        .catch(error => console.error("Error saving score:", error));
-    }
     </script>
 </body>
 </html>

@@ -1,123 +1,152 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASL Sign Display</title>
-    
+    <title>SignMaster - ASL Sign Display</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            padding: 50px;
-            color: #333;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            width: 50%;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h2 {
-            color: #007BFF;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        h3 {
-            font-size: 22px;
-            color: #444;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
         .asl-frame {
-            width: 320px;
-            height: 320px;
-            background-color: #e8f0fe;
-            border-radius: 10px;
+            width: 300px;
+            height: 300px;
+            background-color: var(--sm-surface-subtle);
+            border: 2px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            margin: 0 auto 20px auto;
+            box-shadow: var(--sm-shadow-md);
+            position: relative;
         }
-        img {
-            max-width: 80%;
-            height: auto;
+        #asl-image {
+            max-width: 85%;
+            max-height: 85%;
+            object-fit: contain;
             display: none;
-            animation: fadeIn 0.5s ease-in-out;
+            border-radius: var(--sm-radius-md);
+            animation: fadeIn 0.3s ease-in-out;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
+            from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
-        }
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #ddd;
-            border-top: 5px solid #007BFF;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @media (max-width: 768px) {
-            .container {
-                width: 80%;
-            }
-            .asl-frame {
-                width: 260px;
-                height: 260px;
-            }
         }
     </style>
 </head>
-<body>
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
 
-    <div class="container">
-        <h2>ASL Sign Display</h2>
-        <h3 id="user-input">{{ input_text }}</h3>
-        
-        <div class="asl-frame">
-            <div class="loader" id="loader"></div>
-            <img id="asl-image" src="" alt="ASL Sign">
+    <div class="container py-5" style="max-width: 680px;">
+        <div class="sm-card text-center mb-4">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill" style="background: var(--sm-primary-light); color: var(--sm-primary); font-size: 0.85rem; font-weight: 700;">
+                <i class="bi bi-translate"></i>
+                <span>Sign Language Translation</span>
+            </div>
+
+            <h3 class="fw-bold text-dark mb-1">Visual ASL Playback</h3>
+            <p class="text-muted mb-3">Animating corresponding hand sign gestures for your word</p>
+
+            <div class="p-3 rounded-3 border mb-3 d-inline-flex align-items-center gap-3" style="background: var(--sm-surface-subtle);">
+                <span class="fs-4 fw-bold text-primary letter-spacing-1">"{{ input_text }}"</span>
+                <button type="button" class="sm-btn sm-btn-outline sm-btn-sm" onclick="SignMaster.copyToClipboard('{{ input_text|escapejs }}', this)" title="Copy word">
+                    <i class="bi bi-copy"></i>
+                    <span>Copy</span>
+                </button>
+            </div>
+
+            <div class="asl-frame">
+                <div class="spinner-border text-primary" id="loader" role="status" style="display: none;"></div>
+                <img id="asl-image" src="" alt="ASL Sign">
+            </div>
+
+            <div id="charTracker" class="sm-badge sm-badge-primary mb-3">Loading frames...</div>
+
+            <div class="d-flex justify-content-center gap-2 mb-3">
+                <button type="button" class="sm-btn sm-btn-outline" onclick="restartAnimation()">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Replay</span>
+                </button>
+                <button type="button" class="sm-btn sm-btn-outline" id="pauseBtn" onclick="togglePause()">
+                    <i id="pauseIcon" class="bi bi-pause-fill"></i>
+                    <span id="pauseText">Pause</span>
+                </button>
+            </div>
+
+            <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                <a href="{% url 'input_text' %}" class="sm-btn sm-btn-primary sm-btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Convert Another Word</span>
+                </a>
+                <a href="{% url 'asl_recognize' %}" class="sm-btn sm-btn-outline-primary sm-btn-sm">
+                    <span>Live ASL Vision &rarr;</span>
+                </a>
+            </div>
         </div>
     </div>
 
     <!-- Embed JSON data safely -->
     {{ image_urls|json_script:"asl_images" }}
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const images = JSON.parse(document.getElementById('asl_images').textContent);
+        const images = JSON.parse(document.getElementById('asl_images').textContent || "[]");
         let index = 0;
+        let isPaused = false;
+        let timeoutHandle = null;
+
         const imgElement = document.getElementById('asl-image');
         const loader = document.getElementById('loader');
+        const tracker = document.getElementById('charTracker');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const pauseText = document.getElementById('pauseText');
 
         function showNextImage() {
+            if (isPaused) return;
+
             if (index < images.length) {
                 loader.style.display = "block";
                 imgElement.style.display = "none";
-                setTimeout(() => {
+                tracker.innerText = `Displaying Sign ${index + 1} of ${images.length}`;
+
+                timeoutHandle = setTimeout(() => {
                     loader.style.display = "none";
                     imgElement.src = images[index];
                     imgElement.style.display = "block";
                     index++;
-                    setTimeout(showNextImage, 1500);
-                }, 500);
+                    timeoutHandle = setTimeout(showNextImage, 1400);
+                }, 250);
+            } else {
+                tracker.innerText = `Completed all ${images.length} signs!`;
+                SignMaster.showToast('Playback completed for "{{ input_text|escapejs }}"', 'success');
+            }
+        }
+
+        function restartAnimation() {
+            if (timeoutHandle) clearTimeout(timeoutHandle);
+            index = 0;
+            isPaused = false;
+            pauseIcon.className = "bi bi-pause-fill";
+            pauseText.innerText = "Pause";
+            showNextImage();
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                if (timeoutHandle) clearTimeout(timeoutHandle);
+                pauseIcon.className = "bi bi-play-fill";
+                pauseText.innerText = "Resume";
+            } else {
+                pauseIcon.className = "bi bi-pause-fill";
+                pauseText.innerText = "Pause";
+                showNextImage();
             }
         }
 
         window.onload = showNextImage;
     </script>
-
 </body>
 </html>

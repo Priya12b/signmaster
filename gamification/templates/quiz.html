@@ -1,113 +1,162 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignMaster Quiz</title>
+    <title>SignMaster - ASL Quiz Arena</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        #quiz-container { max-width: 500px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
-        img { max-width: 100%; height: auto; margin: 10px 0; }
-        .option { display: block; margin: 10px 0; padding: 10px; border: 1px solid #ccc; cursor: pointer; border-radius: 5px; }
-        .option:hover { background-color: #f0f0f0; }
-        .level-btn, .next-btn, .leaderboard-btn { margin: 10px; padding: 10px 15px; border: none; cursor: pointer; border-radius: 5px; font-size: 16px; }
-        .beginner { background-color: #4CAF50; color: white; }
-        .intermediate { background-color: #FF9800; color: white; }
-        .high-level { background-color: #F44336; color: white; }
-        .next-btn { background-color: #007BFF; color: white; display: none; }
-        .leaderboard-btn { background-color: #007bff; color: white; font-weight: bold; }
-        .leaderboard-btn:hover { background-color: #4B47CC; }
-        #score { font-size: 18px; font-weight: bold; margin-top: 10px; }
-        #feedback { margin-top: 10px; font-weight: bold; }
-        #timer { font-size: 18px; font-weight: bold; color: #FF0000; margin-top: 10px; }
+        .quiz-card {
+            background: white;
+            border: 1px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
+            padding: 30px;
+            box-shadow: var(--sm-shadow-md);
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .option-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px 18px;
+            border: 1.5px solid var(--sm-border);
+            border-radius: var(--sm-radius-md);
+            background: var(--sm-surface-subtle);
+            color: var(--sm-text);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--sm-transition-fast);
+        }
+        .option-btn:hover {
+            background: white;
+            border-color: var(--sm-primary);
+            color: var(--sm-primary);
+            box-shadow: var(--sm-shadow-sm);
+            transform: translateY(-2px);
+        }
+        .timer-badge {
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: var(--sm-radius-full);
+            background: var(--sm-danger-light);
+            color: var(--sm-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
     </style>
 </head>
-<body>
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
 
-    <h1>SignMaster Quiz</h1>
+    <div class="container py-4" style="max-width: 720px;">
+        <div class="text-center mb-4">
+            <span class="sm-badge sm-badge-primary mb-2">Interactive Quiz</span>
+            <h2 class="fw-bold text-dark mb-1">ASL Knowledge Quiz</h2>
+            <p class="text-muted mb-3">Choose a difficulty level below and test your signing recall</p>
 
-    <div>
-        <button class="level-btn beginner" onclick="startQuiz('Beginner')">Beginner</button>
-        <button class="level-btn intermediate" onclick="startQuiz('Intermediate')">Intermediate</button>
-        <button class="level-btn high-level" onclick="startQuiz('High')">High Talented</button>
-        <button class="leaderboard-btn" onclick="viewLeaderboard()">View Leaderboard</button>
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-2">
+                <button type="button" class="sm-btn sm-btn-success sm-btn-sm" onclick="startQuiz('Beginner')">Beginner</button>
+                <button type="button" class="sm-btn sm-btn-secondary sm-btn-sm" onclick="startQuiz('Intermediate')">Intermediate</button>
+                <button type="button" class="sm-btn sm-btn-primary sm-btn-sm" onclick="startQuiz('High')">High Talented</button>
+                <a href="{% url 'leaderboard' %}" class="sm-btn sm-btn-outline sm-btn-sm">
+                    <i class="bi bi-trophy text-warning"></i>
+                    <span>Leaderboard</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="quiz-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span id="score" class="sm-badge sm-badge-primary">Score: 0</span>
+                <div id="timer" class="timer-badge">
+                    <i class="bi bi-alarm"></i>
+                    <span>Time Left: 15s</span>
+                </div>
+            </div>
+
+            <div id="quiz-container">
+                <h4 id="question-text" class="fw-bold text-dark mt-2 mb-3">Select a level above to begin!</h4>
+                <img id="question-image" style="display: none; max-width: 220px; max-height: 200px; margin: 15px auto; border-radius: var(--sm-radius-md); box-shadow: var(--sm-shadow-sm);">
+                <div id="options" class="mt-3"></div>
+                <div id="feedback" class="fw-bold mt-3" style="min-height: 24px;"></div>
+                <button class="sm-btn sm-btn-primary mt-3" id="nextBtn" style="display: none;" onclick="nextQuestion()">Next Question &rarr;</button>
+            </div>
+
+            <div id="quiz-complete" style="display: none;" class="py-4">
+                <div class="tool-icon-box mx-auto" style="background: var(--sm-accent-light); color: var(--sm-accent); width: 64px; height: 64px; font-size: 2rem;">
+                    <i class="bi bi-award-fill"></i>
+                </div>
+                <h3 class="fw-bold text-dark mt-3 mb-1">🎉 Quiz Completed!</h3>
+                <p class="text-muted">Your final score: <strong id="final-score" class="fs-4 text-primary">0</strong></p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button class="sm-btn sm-btn-outline" onclick="restartQuiz()">Restart Quiz</button>
+                    <a href="{% url 'leaderboard' %}" class="sm-btn sm-btn-primary">View Leaderboard</a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="quiz-container">
-        <p id="timer">Time Left: 15s</p>
-        <h2 id="question-text">Select a level to start the quiz</h2>
-        <img id="question-image" style="display: none;">
-        <div id="options"></div>
-        <p id="feedback"></p>
-        <button class="next-btn" onclick="nextQuestion()">Next Question</button>
-    </div>
-
-    <div id="quiz-complete" style="display: none;">
-        <h2>🎉 Quiz Completed! 🎉</h2>
-        <p>Your final score: <span id="final-score"></span></p>
-        <button onclick="restartQuiz()">Restart Quiz</button>
-        <button class="leaderboard-btn" onclick="viewLeaderboard()">View Leaderboard</button>
-    </div>
-
-    <p id="score">Score: 0</p>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let currentLevel = "";
-        let score = 0;
         let currentQuizIndex = 0;
         let quizzes = [];
+        let score = 0;
         let timer;
         let timeLeft = 15;
+        let currentLevel = "Beginner";
+
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = 15;
+            document.getElementById("timer").innerHTML = `<i class="bi bi-alarm"></i> <span>Time Left: ${timeLeft}s</span>`;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerHTML = `<i class="bi bi-alarm"></i> <span>Time Left: ${timeLeft}s</span>`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showTimeout();
+                }
+            }, 1000);
+        }
+
+        function showTimeout() {
+            document.getElementById("feedback").innerHTML = `<span class="text-danger">⏰ Time's up!</span>`;
+            document.querySelectorAll(".option-btn").forEach(btn => btn.disabled = true);
+            document.getElementById("nextBtn").style.display = "inline-block";
+        }
 
         function startQuiz(level) {
             currentLevel = level;
             score = 0;
             currentQuizIndex = 0;
-            document.getElementById("score").innerText = "Score: 0";
+            document.getElementById("score").innerText = "Score: " + score;
+            document.getElementById("quiz-container").style.display = "block";
+            document.getElementById("quiz-complete").style.display = "none";
             fetchQuiz(level);
         }
 
-        function startTimer() {
-    clearInterval(timer);
-    timeLeft = 15;
-    document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
-
-    timer = setInterval(() => {
-        timeLeft--;
-        const timerElement = document.getElementById("timer");
-        timerElement.innerText = `Time Left: ${timeLeft}s`;
-
-        if (timeLeft <= 5) {
-            timerElement.style.color = "red";
-        } else {
-            timerElement.style.color = "black";
-        }
-
-        if (timeLeft === 0) {
-            clearInterval(timer);
-            document.getElementById("feedback").innerText = "⏳ Time’s up!";
-            document.querySelector(".next-btn").style.display = "block";
-            disableOptions();
-        }
-    }, 1000);
-}
-
-
-        function disableOptions() {
-            let allOptions = document.querySelectorAll(".option");
-            allOptions.forEach(btn => btn.disabled = true);
-        }
-
         function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
 
         async function fetchQuiz(level) {
             try {
-                let response = await fetch(`http://127.0.0.1:8000/gamification/get_quiz/${level}/`);
+                let response = await fetch(`/gamification/get_quiz/${level}/`);
                 if (!response.ok) throw new Error("Failed to fetch quiz.");
 
                 let data = await response.json();
@@ -121,6 +170,7 @@
                 loadQuiz();
             } catch (error) {
                 console.error("Error fetching quiz:", error);
+                SignMaster.showToast("Failed to load quiz questions", "danger");
             }
         }
 
@@ -146,13 +196,13 @@
 
             quiz.options.forEach(option => {
                 let btn = document.createElement("button");
-                btn.className = "option";
+                btn.className = "option-btn";
                 btn.innerText = option.text;
 
                 if (option.image) {
                     let img = document.createElement("img");
                     img.src = option.image;
-                    img.style.maxWidth = "50px";
+                    img.style.maxWidth = "40px";
                     img.style.marginLeft = "10px";
                     btn.appendChild(img);
                 }
@@ -162,33 +212,37 @@
             });
 
             document.getElementById("feedback").innerText = "";
-            document.querySelector(".next-btn").style.display = "none";
+            document.getElementById("nextBtn").style.display = "none";
 
             startTimer();
         }
 
         function checkAnswer(selectedText, button, correctAnswer) {
-            let allOptions = document.querySelectorAll(".option");
+            clearInterval(timer);
+            let allOptions = document.querySelectorAll(".option-btn");
             allOptions.forEach(btn => btn.disabled = true);
 
             if (selectedText === correctAnswer) {
-                button.style.backgroundColor = "green";
-                document.getElementById("feedback").innerText = "✅ Correct!";
+                button.style.backgroundColor = "#D1FAE5";
+                button.style.borderColor = "#10B981";
+                button.style.color = "#065F46";
+                document.getElementById("feedback").innerHTML = `<span class="text-success">✅ Correct Answer!</span>`;
                 score += 1;
             } else {
-        button.style.backgroundColor = "red";
-        document.getElementById("feedback").innerText = `❌ Wrong! The correct answer is: ${correctAnswer}`;
-        // Highlight the correct answer
-        allOptions.forEach(btn => {
-            if (btn.innerText === correctAnswer) {
-                btn.style.backgroundColor = "green";
+                button.style.backgroundColor = "#FEE2E2";
+                button.style.borderColor = "#EF4444";
+                button.style.color = "#991B1B";
+                document.getElementById("feedback").innerHTML = `<span class="text-danger">❌ Incorrect. Correct answer: <strong>${correctAnswer}</strong></span>`;
+                allOptions.forEach(btn => {
+                    if (btn.innerText.trim() === correctAnswer.trim()) {
+                        btn.style.backgroundColor = "#D1FAE5";
+                        btn.style.borderColor = "#10B981";
+                    }
+                });
             }
-        });
-    }
 
             document.getElementById("score").innerText = "Score: " + score;
-            document.querySelector(".next-btn").style.display = "block";
-            clearInterval(timer);
+            document.getElementById("nextBtn").style.display = "inline-block";
         }
 
         function nextQuestion() {
@@ -197,34 +251,29 @@
         }
 
         function endQuiz() {
+            clearInterval(timer);
             document.getElementById("quiz-container").style.display = "none";
             document.getElementById("quiz-complete").style.display = "block";
             document.getElementById("final-score").innerText = score;
 
             let username = prompt("Enter your name for the leaderboard:", "Guest");
-            fetch("http://127.0.0.1:8000/gamification/save_score/", {
+            if (!username) username = "Guest";
+
+            fetch("/gamification/save_score/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: username, score: score })
+                body: JSON.stringify({ username: username, score: score, game_type: "quiz" })
             })
             .then(response => response.json())
-            .then(data => console.log(data.message))
+            .then(data => {
+                SignMaster.showToast("Score saved to Leaderboard!", "success");
+            })
             .catch(error => console.error("Error saving score:", error));
         }
 
         function restartQuiz() {
-            score = 0;
-            currentQuizIndex = 0;
-            document.getElementById("score").innerText = "Score: 0";
-            document.getElementById("quiz-container").style.display = "block";
-            document.getElementById("quiz-complete").style.display = "none";
-            fetchQuiz(currentLevel);
-        }
-
-        function viewLeaderboard() {
-            window.location.href = "/gamification/leaderboard/";  // Redirect to the leaderboard page
+            startQuiz(currentLevel);
         }
     </script>
-
 </body>
 </html>

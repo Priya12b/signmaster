@@ -1,112 +1,143 @@
-{% comment %} {% load static %}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASL Sign Display</title>
-    <div id="asl-container">
-        <h2>ASL Sign Display</h2>
-        <h3 id="user-input">{{ input_text }}</h3>  <!-- ✅ Display input text -->
-        <img id="asl-image" src="" alt="ASL Sign">
-    </div>
-    
-    <!-- Embed JSON data safely -->
-    {{ image_urls|json_script:"asl_images" }}
-    
-    <script>
-        const images = JSON.parse(document.getElementById('asl_images').textContent);
-        let index = 0;
-        const imgElement = document.getElementById('asl-image');
-    
-        function showNextImage() {
-            if (index < images.length) {
-                imgElement.src = images[index];
-                imgElement.style.display = "block";
-                index++;
-                setTimeout(showNextImage, 1500);
-            }
-        }
-    
-        window.onload = showNextImage;
-    </script>
-    
-    <style>
-        #asl-container {
-            text-align: center;
-            margin-top: 50px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h3 {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        img {
-            max-width: 300px;
-            height: auto;
-            display: none;
-        }
-    </style>
-    
-
-</body>
-</html> {% endcomment %}
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASL Sign Display</title>
-    <div id="asl-container">
-        <h2>ASL Sign Display</h2>
-        <h3 id="user-input">{{ input_text }}</h3>  <!-- ✅ Display input text -->
-        <img id="asl-image" src="" alt="ASL Sign">
-    </div>
-    
-    <!-- Embed JSON data safely -->
-    {{ image_urls|json_script:"asl_images" }}
-    
-    <script>
-        const images = JSON.parse(document.getElementById('asl_images').textContent);
-        let index = 0;
-        const imgElement = document.getElementById('asl-image');
-    
-        function showNextImage() {
-            if (index < images.length) {
-                imgElement.src = images[index];
-                imgElement.style.display = "block";
-                index++;
-                setTimeout(showNextImage, 1500);
-            }
-        }
-    
-        window.onload = showNextImage;
-    </script>
-    
+    <title>SignMaster - Voice to Sign Display</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
     <style>
-        #asl-container {
-            text-align: center;
-            margin-top: 50px;
+        .sign-viewer-frame {
+            background: white;
+            border: 2px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
+            padding: 30px;
+            min-height: 380px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            box-shadow: var(--sm-shadow-md);
         }
-        h3 {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 20px;
+        .sign-img {
+            max-width: 240px;
+            max-height: 240px;
+            object-fit: contain;
+            border-radius: var(--sm-radius-md);
+            box-shadow: var(--sm-shadow-sm);
+            transition: transform 0.2s;
         }
-        img {
-            max-width: 300px;
-            height: auto;
-            display: none;
+        .sign-img:hover {
+            transform: scale(1.05);
         }
     </style>
+</head>
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
+
+    <div class="container py-5" style="max-width: 760px;">
+        <div class="sm-card text-center mb-4">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill" style="background: var(--sm-primary-light); color: var(--sm-primary); font-size: 0.85rem; font-weight: 700;">
+                <i class="bi bi-translate"></i>
+                <span>Sign Language Visualizer</span>
+            </div>
+            <h3 class="fw-bold text-dark mb-1">ASL Gesture Playback</h3>
+            <p class="text-muted mb-3">Sequencing animated hand signs for your speech input</p>
+
+            <div class="p-3 rounded-3 border mb-4 text-center" style="background: var(--sm-surface-subtle);">
+                <span class="small fw-bold text-muted d-block mb-1">INPUT PHRASE:</span>
+                <span class="fs-4 fw-bold text-primary">"{{ input_text }}"</span>
+            </div>
+
+            <!-- Sign Viewer Display -->
+            <div class="sign-viewer-frame mb-4">
+                <img id="asl-image" src="" alt="ASL Sign" class="sign-img mb-3" style="display: none;">
+                <div id="sign-placeholder" class="text-muted">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <div>Loading Sign Frames...</div>
+                </div>
+                <div id="sign-counter" class="sm-badge sm-badge-primary mt-2">Frame 0 of 0</div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="sm-btn sm-btn-outline" onclick="replaySigns()">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Replay</span>
+                </button>
+                <button id="pause-btn" type="button" class="sm-btn sm-btn-outline" onclick="togglePause()">
+                    <i id="pause-icon" class="bi bi-pause-fill"></i>
+                    <span id="pause-text">Pause</span>
+                </button>
+                <a href="{% url 'speech-home' %}" class="sm-btn sm-btn-primary">
+                    <i class="bi bi-mic"></i>
+                    <span>New Voice Input</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embed JSON data safely -->
+    {{ image_urls|json_script:"asl_images" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const images = JSON.parse(document.getElementById('asl_images').textContent || "[]");
+        let currentIndex = 0;
+        let isPaused = false;
+        let timer = null;
+
+        const imgElement = document.getElementById('asl-image');
+        const placeholder = document.getElementById('sign-placeholder');
+        const counter = document.getElementById('sign-counter');
+        const pauseIcon = document.getElementById('pause-icon');
+        const pauseText = document.getElementById('pause-text');
+
+        function showNextImage() {
+            if (isPaused) return;
+
+            if (images.length === 0) {
+                placeholder.innerHTML = `<span class="text-muted">No sign image frames found for this phrase.</span>`;
+                return;
+            }
+
+            if (currentIndex < images.length) {
+                placeholder.style.display = 'none';
+                imgElement.style.display = 'block';
+                imgElement.src = images[currentIndex];
+                counter.innerText = `Sign ${currentIndex + 1} of ${images.length}`;
+                currentIndex++;
+                timer = setTimeout(showNextImage, 1400);
+            } else {
+                counter.innerText = `Playback Completed (${images.length} Signs)`;
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearTimeout(timer);
+                pauseIcon.className = 'bi bi-play-fill';
+                pauseText.innerText = 'Resume';
+            } else {
+                pauseIcon.className = 'bi bi-pause-fill';
+                pauseText.innerText = 'Pause';
+                showNextImage();
+            }
+        }
+
+        function replaySigns() {
+            clearTimeout(timer);
+            currentIndex = 0;
+            isPaused = false;
+            pauseIcon.className = 'bi bi-pause-fill';
+            pauseText.innerText = 'Pause';
+            showNextImage();
+        }
+
+        window.onload = showNextImage;
+    </script>
 </body>
 </html>

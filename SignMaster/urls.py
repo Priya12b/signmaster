@@ -6,6 +6,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include("Dashboard.urls")),
+    path('asl/', include('asl_sign.urls')),
     path('gamification/',include("gamification.urls")),
     path('plan/', include("AIPlanner.urls", namespace='AIPlanner')),
     path('speech/', include('speech_to_text.urls')),

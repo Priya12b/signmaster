@@ -1,79 +1,87 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to ASL Converter</title>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            padding: 50px;
-            color: #333;
-        }
-        .container {
-            background: rgb(202, 220, 230);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 50%;
-            margin: auto;
-        }
-        h2 {
-            color: #007BFF;
-            font-size: 28px;
-        }
-        form {
-            margin-top: 20px;
-        }
-        input[type="text"] {
-            width: 80%;
-            padding: 12px;
-            font-size: 18px;
-            border: 1px solid #272c4b;
-            background-color: #dfe3e7;
-            border-radius: 8px;
-            outline: none;
-            transition: 0.3s;
-        }
-        input[type="text"]:focus {
-            border-color: #007BFF;
-        }
-        button {
-            margin-top: 15px;
-            padding: 12px 25px;
-            font-size: 18px;
-            color: white;
-            background: linear-gradient(45deg, #007BFF, #0056b3);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        button:hover {
-            background: linear-gradient(45deg, #0056b3, #00408a);
-        }
-        @media (max-width: 768px) {
-            .container {
-                width: 80%;
-            }
-            input[type="text"] {
-                width: 90%;
-            }
-        }
-    </style>
+    <title>SignMaster - Text to ASL Converter</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
 </head>
-<body>
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
 
-    <div class="container">
-        <h2>Convert Text to ASL Sign Language</h2>
-        <form action="{% url 'text_to_sign' %}" method="GET">
-            <input type="text" name="text" placeholder="Enter text here..." required>
-            <br>
-            <button type="submit">Convert to ASL</button>
-        </form>
+    <div class="container py-5" style="max-width: 680px;">
+        <div class="sm-card text-center mb-4">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3 rounded-pill" style="background: var(--sm-primary-light); color: var(--sm-primary); font-size: 0.85rem; font-weight: 700;">
+                <i class="bi bi-chat-quote-fill"></i>
+                <span>Sign Language Translator</span>
+            </div>
+
+            <h2 class="fw-bold text-dark mb-2">Convert English Text to ASL</h2>
+            <p class="text-muted mb-4" style="max-width: 480px; margin: 0 auto;">
+                Type any word, name, or phrase to display the corresponding American Sign Language gestures frame-by-frame.
+            </p>
+
+            {% if error %}
+                <div class="alert alert-warning py-2 mb-3" style="font-size: 14px;">
+                    <i class="bi bi-exclamation-triangle me-1"></i> {{ error }}
+                </div>
+            {% endif %}
+
+            <form action="{% url 'text_to_sign' %}" method="GET">
+                <div class="mb-3">
+                    <input type="text" id="text-input" name="text" class="form-control text-center" placeholder="e.g. HELLO, SIGNMASTER, PEACE" value="{{ input_text|default:'' }}" required autofocus style="border-radius: var(--sm-radius-md); padding: 14px 20px; font-size: 1.15rem; font-weight: 600; text-transform: uppercase;">
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="sm-btn sm-btn-primary sm-btn-lg flex-grow-1">
+                        <i class="bi bi-translate"></i>
+                        <span>Convert to Sign Language</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <!-- Quick Duplicate/Copy Button -->
+                    <button type="button" class="sm-btn sm-btn-outline sm-btn-lg" onclick="duplicateInputText(this)" title="Copy text to clipboard">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-4 pt-3 border-top">
+                <small class="text-muted fw-bold d-block mb-2">QUICK TRY CHIPS:</small>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="{% url 'text_to_sign' %}?text=HELLO" class="sm-badge sm-badge-primary text-decoration-none py-2 px-3">HELLO</a>
+                    <a href="{% url 'text_to_sign' %}?text=WELCOME" class="sm-badge sm-badge-primary text-decoration-none py-2 px-3">WELCOME</a>
+                    <a href="{% url 'text_to_sign' %}?text=SIGNMASTER" class="sm-badge sm-badge-primary text-decoration-none py-2 px-3">SIGNMASTER</a>
+                    <a href="{% url 'text_to_sign' %}?text=FRIEND" class="sm-badge sm-badge-primary text-decoration-none py-2 px-3">FRIEND</a>
+                    <a href="{% url 'text_to_sign' %}?text=PEACE" class="sm-badge sm-badge-primary text-decoration-none py-2 px-3">PEACE</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center px-2">
+            <a href="{% url 'dashboard' %}" class="sm-btn sm-btn-outline sm-btn-sm">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <a href="{% url 'asl_recognize' %}" class="sm-btn sm-btn-outline-primary sm-btn-sm">
+                <i class="bi bi-camera-video"></i>
+                <span>Live ASL Camera Recognition &rarr;</span>
+            </a>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function duplicateInputText(btn) {
+            const inputVal = document.getElementById('text-input').value.trim();
+            if (!inputVal) {
+                SignMaster.showToast('Please type text first!', 'warning');
+                return;
+            }
+            SignMaster.copyToClipboard(inputVal, btn, `Copied "${inputVal}" to clipboard!`);
+        }
+    </script>
 </body>
 </html>

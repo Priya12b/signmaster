@@ -9,7 +9,7 @@ from gamification.views import quiz,word_match_game,flashcard_game,sign_typing_g
 from .views import basic_questions
 from .views import vocabulary_page
 from django.urls import include 
-from asl_sign.views import text_to_sign,input_page
+from asl_sign.views import text_to_sign, input_page, asl_recognize_page, model_insights_page, api_predict_gesture, api_launch_webcam
 from speech_to_text.views import speech_to_text_home
 
 def redirect_to_login(request):
@@ -38,6 +38,10 @@ urlpatterns = [
     path("sign-typing-game/",sign_typing_game,name="sign-typing-game"),
     path('input/', input_page, name='input_text'), 
     path('text-to-sign/', text_to_sign, name='text_to_sign'),
+    path('recognize/', asl_recognize_page, name='asl_recognize'),
+    path('model-insights/', model_insights_page, name='model_insights'),
+    path('asl/api/predict/', api_predict_gesture, name='asl_api_predict'),
+    path('asl/api/launch-webcam/', api_launch_webcam, name='asl_api_launch_webcam'),
     path('speech/', include('speech_to_text.urls')), 
     # path('ab/', speech_to_text_home, name='speech-home'),
 ]

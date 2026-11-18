@@ -1,7 +1,6 @@
 import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
-from gamification.models import Quiz
 from Dashboard.models import CustomUser
 
 User = get_user_model()
@@ -11,17 +10,19 @@ class ExtendedUserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     skill_level = models.CharField(
         max_length=20, 
-        choices=[('Beginner', 'Beginner'), ('Intermediate', 'Intermediate'), ('Advanced', 'Advanced')]
+        choices=[('Beginner', 'Beginner'), ('Intermediate', 'Intermediate'), ('Advanced', 'Advanced')],
+        default='Beginner'
     )
     learning_speed = models.CharField(
         max_length=10, 
-        choices=[('Slow', 'Slow'), ('Moderate', 'Moderate'), ('Fast', 'Fast')]
+        choices=[('Slow', 'Slow'), ('Moderate', 'Moderate'), ('Fast', 'Fast')],
+        default='Moderate'
     )
     daily_hours = models.IntegerField(default=2)
-    preferred_days = models.JSONField(default=list)  # Example: ['Monday', 'Wednesday', 'Friday']
+    preferred_days = models.JSONField(default=list)  # e.g. ['Monday', 'Wednesday', 'Friday']
 
     def __str__(self):
-        return f"{self.user.name}'s Profile"
+        return f"{self.user.name or self.user.email}'s Profile"
     
 class Course(models.Model):
     name = models.CharField(max_length=255)
@@ -38,7 +39,7 @@ class Exercise(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     difficulty_level = models.CharField(max_length=20, choices=[('Beginner', 'Beginner'), ('Intermediate', 'Intermediate'), ('Advanced', 'Advanced')])
-    exercises_and_hours = models.JSONField()
+    exercises_and_hours = models.JSONField(default=dict)
     
     def __str__(self):
         return self.name
@@ -48,32 +49,44 @@ class StudySchedule(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     skill_level = models.CharField(max_length=20)
     learning_speed = models.CharField(max_length=10)
-    daily_hours = models.IntegerField()
+    daily_hours = models.IntegerField(default=2)
     preferred_days = models.JSONField(default=list)
     generated_study_plan = models.TextField(null=True, blank=True)
+    completion_date = models.DateField(null=True, blank=True)
+    progress_percentage = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
-        return f"{self.user.username}'s Study Schedule"
+        return f"{self.user.email}'s Study Schedule ({self.skill_level})"
     
-    def calculate_completion_date(self):
-        user_profile = ExtendedUserProfile.objects.get(user=self.user)
-        total_hours = self.course.estimated_hours
-        daily_hours = user_profile.daily_hours
-        days_needed = total_hours / daily_hours
+    def calculate_completion_date(self, total_hours=None):
+        if not total_hours:
+            hours_map = {'Beginner': 16, 'Intermediate': 28, 'Advanced': 42}
+            total_hours = hours_map.get(self.skill_level, 20)
+
+        daily_hours = max(1, self.daily_hours or 2)
+        days_needed = max(1, int(total_hours / daily_hours))
         today = datetime.date.today()
         
-        preferred_days = user_profile.preferred_days
-        delta = datetime.timedelta(days=1)
-        count = 0
-        completion_date = today
+        pref_days = [d.capitalize() for d in self.preferred_days] if self.preferred_days else [
+            'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
+        ]
         
-        while count < days_needed:
-            completion_date += delta
-            if completion_date.strftime('%A') in preferred_days:
+        current = today
+        count = 0
+        max_loop = 365
+        loop = 0
+        
+        while count < days_needed and loop < max_loop:
+            current += datetime.timedelta(days=1)
+            loop += 1
+            if current.strftime('%A') in pref_days:
                 count += 1
         
-        return completion_date
+        return current
 
     def save(self, *args, **kwargs):
         if not self.completion_date:

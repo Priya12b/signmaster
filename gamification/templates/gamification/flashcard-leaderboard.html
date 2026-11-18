@@ -1,63 +1,63 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcard Leaderboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        table {
-            margin: auto;
-            border-collapse: collapse;
-            width: 80%;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: center;
-            font-size: 16px;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #e9ecef;
-            transition: 0.3s;
-        }
-    </style>
+    <title>SignMaster - Flashcard Leaderboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
 </head>
-<body>
-    <h1>🏆 Flashcard Leaderboard</h1>
-    <table>
-        <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>Score</th>
-        </tr>
-        {% for score in scores %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ score.username }}</td>
-            <td>{{ score.score }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+<body class="sm-page-bg">
+{% include 'partials/navbar.html' %}
+
+    <div class="container py-5" style="max-width: 720px;">
+        <div class="sm-card text-center mb-4">
+            <div class="tool-icon-box mx-auto" style="background: var(--sm-accent-light); color: var(--sm-accent); width: 64px; height: 64px; font-size: 2rem;">
+                <i class="bi bi-card-text"></i>
+            </div>
+            <h2 class="fw-bold text-dark mt-2 mb-1">Flashcard Hall of Fame</h2>
+            <p class="text-muted mb-4">Top sign language memory masters</p>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: var(--sm-surface-subtle); color: var(--sm-text-muted); font-size: 0.85rem;">
+                        <tr>
+                            <th class="py-3 px-4 text-start">Rank</th>
+                            <th class="py-3 px-4 text-start">Player</th>
+                            <th class="py-3 px-4 text-end">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score in scores %}
+                        <tr>
+                            <td class="py-3 px-4 text-start">
+                                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}<span class="text-muted fw-bold">#{{ forloop.counter }}</span>{% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-start fw-bold text-dark">{{ score.username }}</td>
+                            <td class="py-3 px-4 text-end fw-bold text-primary fs-5">{{ score.score }} pts</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="py-4 text-muted">No flashcard scores recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                <a href="{% url 'flashcard_game' %}" class="sm-btn sm-btn-primary sm-btn-sm">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Play Again</span>
+                </a>
+                <a href="{% url 'dashboard' %}" class="sm-btn sm-btn-outline sm-btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

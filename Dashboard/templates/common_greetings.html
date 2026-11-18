@@ -4,53 +4,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Common Greetings</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SignMaster - Common ASL Greetings</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
+    <style>
+        .greeting-card {
+            background: white;
+            border: 1px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
+            padding: 24px;
+            box-shadow: var(--sm-shadow-sm);
+            text-align: center;
+            transition: all var(--sm-transition-smooth);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .greeting-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--sm-shadow-lg);
+            border-color: var(--sm-primary);
+        }
+        .greeting-img {
+            max-width: 140px;
+            max-height: 140px;
+            object-fit: contain;
+            margin: 15px auto 0 auto;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="sm-page-bg">
+{% include 'partials/navbar.html' %}
 
-    <!-- Header -->
-    <header class="text-center bg-gradient-to-r from-purple-600 to-gray-700 text-white py-6 text-4xl font-bold shadow-lg">
-        Common Greetings in ASL
-    </header>
-
-    <!-- Full Width Image -->
-    <section class="w-full flex justify-center mt-6">
-        <img src="{% static 'images/Greeting.png' %}" alt="Common Greetings in ASL"
-             class="w-[1500px] h-[550px] object-contain shadow-lg">
-    </section>
-
-    <!-- Greetings Section -->
-    <section class="max-w-4xl mx-auto my-10 px-6">
-        <div class="grid sm:grid-cols-2 gap-6">
-            
-            <!-- Greeting Card -->
-            <div class="bg-white p-6 rounded-xl shadow-md text-center border border-purple-300">
-                <h2 class="text-2xl font-semibold text-purple-700">Hello</h2>
-                <p class="text-gray-600 mt-2">ASL Sign: Extend your dominant hand and move it in a small wave.</p>
-                <img src="{% static 'images/Hello.png' %}" alt="Hello in ASL" class="mt-4 mx-auto w-32">
-            </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-md text-center border border-purple-300">
-                <h2 class="text-2xl font-semibold text-purple-700">Thank You</h2>
-                <p class="text-gray-600 mt-2">ASL Sign: Touch your fingers to your chin and move your hand forward.</p>
-                <img src="{% static 'images/Thank_you.png' %}" alt="Thank You in ASL" class="mt-4 mx-auto w-32">
-            </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-md text-center border border-purple-300">
-                <h2 class="text-2xl font-semibold text-purple-700">Good Morning</h2>
-                <p class="text-gray-600 mt-2">ASL Sign: Move your dominant hand upward like the sun rising.</p>
-                <img src="{% static 'images/Good_morning.png' %}" alt="Good Morning in ASL" class="mt-4 mx-auto w-32">
-            </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-md text-center border border-purple-300">
-                <h2 class="text-2xl font-semibold text-purple-700">Goodbye</h2>
-                <p class="text-gray-600 mt-2">ASL Sign: Wave your hand as you would normally say goodbye.</p>
-                <img src="{% static 'images/Good_bye.png' %}" alt="Goodbye in ASL" class="mt-4 mx-auto w-32">
-            </div>
-
+    <div class="container py-4" style="max-width: 960px;">
+        <div class="text-center mb-4">
+            <span class="sm-badge sm-badge-primary mb-2">Beginner Module</span>
+            <h2 class="fw-bold text-dark mb-1">Common Greetings in ASL</h2>
+            <p class="text-muted mb-0">Everyday social interactions, polite phrases, and opening conversation signs.</p>
         </div>
-    </section>
 
+        <div class="sm-card mb-4 text-center p-3">
+            <img src="{% static 'images/Greeting.png' %}" alt="Common Greetings in ASL" class="img-fluid rounded-3" style="max-height: 380px; object-fit: contain;">
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="greeting-card h-100">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-1">Hello</h4>
+                        <p class="text-muted small">Extend your dominant hand and move it from forehead in a small forward wave.</p>
+                    </div>
+                    <img src="{% static 'images/Hello.png' %}" alt="Hello in ASL" class="greeting-img">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="greeting-card h-100">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-1">Thank You</h4>
+                        <p class="text-muted small">Touch fingers of your open hand to your chin and bring your palm forward toward the person.</p>
+                    </div>
+                    <img src="{% static 'images/Thank_you.png' %}" alt="Thank You in ASL" class="greeting-img">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="greeting-card h-100">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-1">Good Morning</h4>
+                        <p class="text-muted small">Sign 'Good' from chin into horizontal forearm, then rise your arm up like the sun rising.</p>
+                    </div>
+                    <img src="{% static 'images/Good_morning.png' %}" alt="Good Morning in ASL" class="greeting-img">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="greeting-card h-100">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-1">Goodbye</h4>
+                        <p class="text-muted small">Raise open hand with palm facing outward, flexing fingers downward in a natural farewell wave.</p>
+                    </div>
+                    <img src="{% static 'images/Good_bye.png' %}" alt="Goodbye in ASL" class="greeting-img">
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard' %}" class="sm-btn sm-btn-outline">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <a href="{% url 'asl_recognize' %}" class="sm-btn sm-btn-primary ms-2">
+                <span>Practice in ASL Vision &rarr;</span>
+            </a>
+        </div>
+    </div>
 </body>
 </html>

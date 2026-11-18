@@ -1,63 +1,117 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaderboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        #leaderboard-container { max-width: 600px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background-color: #007bff; }
-        h1 { margin-bottom: 20px; }
-        button { margin-top: 20px; padding: 10px 15px; border: none; cursor: pointer; border-radius: 5px; background-color: #007BFF; color: white; }
-        button:hover { background-color: #0056b3; }
-    </style>
+    <title>SignMaster - Hall of Fame Leaderboards</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
 </head>
-<body>
-    <div id="leaderboard-container">
-        <h1>🏆 Quiz Leaderboard</h1>
-        <table id="leaderboard">
-            <tr>
-                <th>Player</th>
-                <th>Score</th>
-            </tr>
-        </table>
-        <!-- <button onclick="fetchLeaderboard()">Refresh Leaderboard 🔄</button> -->
-        <button onclick="goBack()">Back to Quiz</button>
-    </div> 
+<body class="sm-page-bg">
+    {% include 'partials/navbar.html' %}
+
+    <div class="container py-5" style="max-width: 720px;">
+        <div class="sm-card mb-4 text-center">
+            <div class="tool-icon-box mx-auto" style="background: #FFFBEB; color: #D97706; width: 64px; height: 64px; font-size: 2rem;">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+            <h2 class="fw-bold text-dark mt-2 mb-1">Hall of Fame Leaderboard</h2>
+            <p class="text-muted mb-3">Top scoring players across SignMaster practice challenges</p>
+
+            <!-- Game Type Filter Pills -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                <button type="button" class="sm-btn sm-btn-primary sm-btn-sm lb-tab" onclick="switchLb('quiz', this)">Quiz</button>
+                <button type="button" class="sm-btn sm-btn-outline sm-btn-sm lb-tab" onclick="switchLb('word_match', this)">Word Match</button>
+                <button type="button" class="sm-btn sm-btn-outline sm-btn-sm lb-tab" onclick="switchLb('flashcards', this)">Flashcards</button>
+                <button type="button" class="sm-btn sm-btn-outline sm-btn-sm lb-tab" onclick="switchLb('sign_typing_game', this)">Sign Typing</button>
+            </div>
+
+            <!-- Leaderboard Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: var(--sm-surface-subtle); color: var(--sm-text-muted); font-size: 0.85rem;">
+                        <tr>
+                            <th class="py-3 px-4 text-start">Rank</th>
+                            <th class="py-3 px-4 text-start">Player</th>
+                            <th class="py-3 px-4 text-end">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr>
+                            <td colspan="3" class="py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                Loading rankings...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                <a href="{% url 'quiz' %}" class="sm-btn sm-btn-primary sm-btn-sm">
+                    <i class="bi bi-controller"></i>
+                    <span>Play Quiz &rarr;</span>
+                </a>
+                <a href="{% url 'dashboard' %}" class="sm-btn sm-btn-outline sm-btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        let currentGame = "quiz";
+
+        function switchLb(gameType, btn) {
+            currentGame = gameType;
+            document.querySelectorAll('.lb-tab').forEach(b => {
+                b.className = 'sm-btn sm-btn-outline sm-btn-sm lb-tab';
+            });
+            btn.className = 'sm-btn sm-btn-primary sm-btn-sm lb-tab';
+            fetchLeaderboard(gameType);
+        }
+
         function fetchLeaderboard(gameType = "quiz") {
-            fetch(`http://127.0.0.1:8000/gamification/get_leaderboard/?game_type=${gameType}`)
+            const tbody = document.getElementById("leaderboard-body");
+            tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading rankings...</td></tr>`;
+
+            fetch(`/gamification/get_leaderboard/?game_type=${gameType}`)
                 .then(response => response.json())
                 .then(data => {
-                    let leaderboardTable = document.getElementById("leaderboard");
-                    leaderboardTable.innerHTML = "<tr><th>Player</th><th>Score</th></tr>";
+                    tbody.innerHTML = "";
 
-                    if (data.leaderboard.length === 0) {
-                        let row = leaderboardTable.insertRow();
-                        let cell = row.insertCell(0);
-                        cell.colSpan = 2;
-                        cell.innerText = "No scores yet.";
+                    if (!data.leaderboard || data.leaderboard.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-muted">No high scores recorded yet for this challenge. Be the first!</td></tr>`;
                         return;
                     }
 
-                    data.leaderboard.forEach(entry => {
-                        let row = leaderboardTable.insertRow();
-                        row.insertCell(0).innerText = entry.username;
-                        row.insertCell(1).innerText = entry.score;
+                    data.leaderboard.forEach((entry, idx) => {
+                        let rankBadge = `<span class="fw-bold text-muted">#${idx + 1}</span>`;
+                        if (idx === 0) rankBadge = `<span class="fs-5">🥇</span>`;
+                        if (idx === 1) rankBadge = `<span class="fs-5">🥈</span>`;
+                        if (idx === 2) rankBadge = `<span class="fs-5">🥉</span>`;
+
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td class="py-3 px-4 text-start">${rankBadge}</td>
+                            <td class="py-3 px-4 text-start fw-bold text-dark">${entry.username || 'Anonymous'}</td>
+                            <td class="py-3 px-4 text-end fw-bold text-primary fs-5">${entry.score} pts</td>
+                        `;
+                        tbody.appendChild(row);
                     });
                 })
-                .catch(error => console.error("Error fetching leaderboard:", error));
+                .catch(error => {
+                    console.error("Error fetching leaderboard:", error);
+                    tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-danger">Failed to fetch leaderboard data.</td></tr>`;
+                });
         }
 
-        function goBack() {
-            window.location.href = "/gamification/quiz/"; // Adjust the URL to your quiz page
-        }
-
-        // Fetch leaderboard on page load
-        fetchLeaderboard();
+        // Initialize on load
+        fetchLeaderboard("quiz");
     </script>
 </body>
 </html>

@@ -1,0 +1,565 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignMaster - Real-Time ASL Recognition</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: #2b2d42;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .header-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #e1e7f0;
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .brand img {
+            width: 36px;
+            height: 36px;
+            margin-right: 12px;
+        }
+        .nav-links a {
+            margin-left: 15px;
+            text-decoration: none;
+            color: #495057;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background-color: #eaf2ff;
+            color: #007BFF;
+        }
+        .main-container {
+            max-width: 1180px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+        .recognition-card {
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            padding: 22px;
+            margin-bottom: 25px;
+        }
+        .camera-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #webcamVideo {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            transform: scaleX(-1);
+        }
+        #previewImage {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            display: none;
+            margin: 0 auto;
+        }
+        .roi-guide {
+            position: absolute;
+            width: 230px;
+            height: 230px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid #00e676;
+            border-radius: 12px;
+            pointer-events: none;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+            transition: border-color 0.2s;
+        }
+        .roi-guide.detected {
+            border-color: #00e676;
+        }
+        .roi-guide.low-conf {
+            border-color: #ffb703;
+        }
+        .result-panel {
+            background: #f8faff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .big-letter {
+            font-size: 96px;
+            font-weight: 800;
+            color: #007BFF;
+            line-height: 1;
+            margin: 10px 0;
+            transition: color 0.2s;
+        }
+        .conf-badge {
+            display: inline-block;
+            background: #e7f5ea;
+            color: #1b873f;
+            font-weight: 600;
+            font-size: 17px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            margin-bottom: 12px;
+        }
+        .btn-custom {
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #007BFF, #0056b3);
+            color: white;
+            border: none;
+        }
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #0056b3, #003d80);
+            color: white;
+        }
+        .candidate-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 12px;
+            background: #ffffff;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            border: 1px solid #edf2f7;
+        }
+        .preview-roi-box {
+            display: inline-flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 10px;
+        }
+        .preview-roi-box img {
+            width: 70px;
+            height: 70px;
+            border-radius: 6px;
+            border: 2px solid #007BFF;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        .alphabet-drawer {
+            margin-top: 15px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .asl-thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin: 3px;
+            background: #fff;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .asl-thumb:hover {
+            transform: scale(1.15);
+            border-color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+{% include 'partials/navbar.html' %}
+
+    <div class="main-container">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="sm-badge sm-badge-primary">Computer Vision Engine</span>
+                    <span class="sm-badge sm-badge-success">MobileNetV2 (94.5% Accuracy)</span>
+                </div>
+                <h2 class="fw-bold mb-1 text-dark">Real-Time ASL Alphabet Recognition</h2>
+                <p class="text-muted mb-0">High-speed on-device inference &bull; 26 Gesture Classes (A&ndash;Z) &bull; 1:1 Hand ROI Bounding Box</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'model_insights' %}" class="sm-btn sm-btn-outline sm-btn-sm">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Confusion Matrix & Logs</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left: Video / Image Input Box -->
+            <div class="col-lg-7">
+                <div class="recognition-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm active" id="modeWebcamBtn" onclick="switchMode('webcam')">Live Webcam</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="modeUploadBtn" onclick="switchMode('upload')">Upload Image</button>
+                        </div>
+                        <span class="badge bg-success" id="streamStatus">Webcam Ready</span>
+                    </div>
+
+                    <!-- Camera & Guide Wrapper -->
+                    <div class="camera-wrapper" id="cameraWrapper">
+                        <video id="webcamVideo" autoplay playsinline></video>
+                        <img id="previewImage" alt="Image Preview">
+                        <div class="roi-guide" id="roiGuide">
+                            <span>Place Hand Here</span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden processing canvas -->
+                    <canvas id="hiddenCanvas" style="display:none;"></canvas>
+
+                    <!-- Bottom Controls & Cropped ROI Feedback -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+                        <div id="webcamControls">
+                            <button class="btn btn-primary-custom btn-custom" id="startCamBtn" onclick="toggleWebcam()">Start Live Prediction</button>
+                            <button class="btn btn-outline-secondary btn-custom ms-2" onclick="launchNativeOpenCV()">Launch OpenCV App</button>
+                        </div>
+                        <div id="uploadControls" style="display:none;">
+                            <input type="file" id="imageInput" accept="image/*" class="form-control form-control-sm d-inline-block" style="width: auto;" onchange="handleImageUpload(event)">
+                            <button class="btn btn-primary-custom btn-custom ms-2" onclick="predictUploadedImage()">Predict Image</button>
+                        </div>
+
+                        <!-- Live Crop Feedback: Shows exact image sent to neural net -->
+                        <div class="preview-roi-box" id="roiFeedbackBox" style="display:none;">
+                            <img id="roiPreviewImg" src="" alt="Cropped ROI">
+                            <div class="text-start" style="font-size: 12px; line-height: 1.3;">
+                                <strong style="color: #007BFF;">Model Input (ROI)</strong><br>
+                                <span class="text-muted">Cropped tightly around gesture</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ASL Alphabet Gesture Quick Reference -->
+                    <div class="alphabet-drawer mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="fw-bold text-muted">ASL ALPHABET GESTURE REFERENCE (Click to view):</small>
+                            <span class="badge bg-light text-dark border">A &ndash; Z</span>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-start" id="alphabetThumbnails">
+                            <!-- Thumbnails injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Real-time Prediction Panel -->
+            <div class="col-lg-5">
+                <div class="recognition-card h-100">
+                    <div class="result-panel">
+                        <div>
+                            <h6 class="text-uppercase text-muted fw-bold mb-1">Detected ASL Letter</h6>
+                            <div class="big-letter" id="predictedLetter">-</div>
+                            <div>
+                                <span class="conf-badge" id="confidenceBadge">Waiting for Gesture...</span>
+                            </div>
+
+                            <div class="progress mb-3" style="height: 12px; border-radius: 6px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="confidenceBar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="statusHint" class="small text-muted mb-3">Place your hand inside the green box under good lighting.</div>
+                        </div>
+
+                        <div class="text-start">
+                            <h6 class="fw-bold mb-2 text-muted" style="font-size: 13px;">TOP PREDICTIONS:</h6>
+                            <div id="candidatesList">
+                                <div class="candidate-item"><span>1st Candidate</span><span>--</span></div>
+                                <div class="candidate-item"><span>2nd Candidate</span><span>--</span></div>
+                                <div class="candidate-item"><span>3rd Candidate</span><span>--</span></div>
+                            </div>
+
+                            <div class="alert alert-info mt-3 py-2 px-3" style="font-size: 12px;">
+                                <strong>Tip for Best Accuracy:</strong>
+                                <ul class="mb-0 ps-3">
+                                    <li>Keep your hand inside the green square box.</li>
+                                    <li>Ensure adequate front lighting (avoid backlighting).</li>
+                                    <li>Hold your gesture steady for 1 second.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let webcamStream = null;
+        let isPredicting = false;
+        let predictionInterval = null;
+        let isRequestPending = false;
+
+        const video = document.getElementById('webcamVideo');
+        const previewImg = document.getElementById('previewImage');
+        const canvas = document.getElementById('hiddenCanvas');
+        const roiGuide = document.getElementById('roiGuide');
+        const roiFeedbackBox = document.getElementById('roiFeedbackBox');
+        const roiPreviewImg = document.getElementById('roiPreviewImg');
+        const cameraWrapper = document.getElementById('cameraWrapper');
+
+        // Populate alphabet quick-reference drawer
+        const alphabetContainer = document.getElementById('alphabetThumbnails');
+        for (let i = 0; i < 26; i++) {
+            const letter = String.fromCharCode(65 + i);
+            const img = document.createElement('img');
+            img.src = `/static/images/alphabet/${letter}.png`;
+            img.alt = letter;
+            img.title = `Gesture for ${letter}`;
+            img.className = 'asl-thumb';
+            img.onclick = () => {
+                alert(`Letter ${letter}: Hold this exact hand shape inside the green box.`);
+            };
+            alphabetContainer.appendChild(img);
+        }
+
+        function switchMode(mode) {
+            if (mode === 'webcam') {
+                document.getElementById('modeWebcamBtn').classList.add('active');
+                document.getElementById('modeUploadBtn').classList.remove('active');
+                video.style.display = 'block';
+                previewImg.style.display = 'none';
+                roiGuide.style.display = 'flex';
+                document.getElementById('webcamControls').style.display = 'block';
+                document.getElementById('uploadControls').style.display = 'none';
+                document.getElementById('streamStatus').innerText = 'Webcam Ready';
+                document.getElementById('streamStatus').className = 'badge bg-success';
+            } else {
+                stopWebcam();
+                document.getElementById('modeUploadBtn').classList.add('active');
+                document.getElementById('modeWebcamBtn').classList.remove('active');
+                video.style.display = 'none';
+                previewImg.style.display = 'block';
+                roiGuide.style.display = 'none';
+                roiFeedbackBox.style.display = 'none';
+                document.getElementById('webcamControls').style.display = 'none';
+                document.getElementById('uploadControls').style.display = 'block';
+                document.getElementById('streamStatus').innerText = 'Upload Mode';
+                document.getElementById('streamStatus').className = 'badge bg-secondary';
+            }
+        }
+
+        async function startWebcam() {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+                });
+                video.srcObject = webcamStream;
+                document.getElementById('startCamBtn').innerText = 'Pause Live Prediction';
+                document.getElementById('startCamBtn').classList.replace('btn-primary-custom', 'btn-danger');
+                document.getElementById('streamStatus').innerText = 'Live Recognition Active';
+                document.getElementById('streamStatus').className = 'badge bg-danger';
+                roiFeedbackBox.style.display = 'inline-flex';
+                isPredicting = true;
+                // Query every 280ms
+                predictionInterval = setInterval(captureAndPredict, 280);
+            } catch (err) {
+                alert('Webcam access error: ' + err.message + '\nYou can also use "Launch OpenCV App" for native desktop camera.');
+            }
+        }
+
+        function stopWebcam() {
+            if (predictionInterval) clearInterval(predictionInterval);
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            isPredicting = false;
+            document.getElementById('startCamBtn').innerText = 'Start Live Prediction';
+            document.getElementById('startCamBtn').classList.replace('btn-danger', 'btn-primary-custom');
+            document.getElementById('streamStatus').innerText = 'Webcam Paused';
+            document.getElementById('streamStatus').className = 'badge bg-secondary';
+            roiFeedbackBox.style.display = 'none';
+            document.getElementById('predictedLetter').innerText = '-';
+            document.getElementById('confidenceBadge').innerText = 'Paused';
+            document.getElementById('confidenceBar').style.width = '0%';
+        }
+
+        function toggleWebcam() {
+            if (isPredicting) {
+                stopWebcam();
+            } else {
+                startWebcam();
+            }
+        }
+
+        function captureAndPredict() {
+            if (!webcamStream || video.videoWidth === 0 || isRequestPending) return;
+
+            const vw = video.videoWidth;
+            const vh = video.videoHeight;
+
+            // 1. Render mirrored frame onto fullCanvas
+            const fullCanvas = document.createElement('canvas');
+            fullCanvas.width = vw;
+            fullCanvas.height = vh;
+            const fullCtx = fullCanvas.getContext('2d');
+            fullCtx.translate(vw, 0);
+            fullCtx.scale(-1, 1);
+            fullCtx.drawImage(video, 0, 0, vw, vh);
+
+            // 2. Compute exact bounding box of the green ROI guide relative to video
+            const videoRect = video.getBoundingClientRect();
+            const roiRect = roiGuide.getBoundingClientRect();
+
+            const scaleX = vw / videoRect.width;
+            const scaleY = vh / videoRect.height;
+
+            const cropX = Math.max(0, Math.round((roiRect.left - videoRect.left) * scaleX));
+            const cropY = Math.max(0, Math.round((roiRect.top - videoRect.top) * scaleY));
+            const cropW = Math.min(vw - cropX, Math.round(roiRect.width * scaleX));
+            const cropH = Math.min(vh - cropY, Math.round(roiRect.height * scaleY));
+
+            if (cropW <= 0 || cropH <= 0) return;
+
+            // 3. Extract the tightly cropped ROI into a 224x224 square for the model
+            canvas.width = 224;
+            canvas.height = 224;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(fullCanvas, cropX, cropY, cropW, cropH, 0, 0, 224, 224);
+
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+            // Update live ROI preview thumbnail for user feedback
+            roiPreviewImg.src = croppedDataUrl;
+
+            // Send to backend ML inference
+            sendPredictionRequest(croppedDataUrl);
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function predictUploadedImage() {
+            if (!previewImg.src) {
+                alert('Please choose an image file first.');
+                return;
+            }
+            sendPredictionRequest(previewImg.src);
+        }
+
+        async function sendPredictionRequest(imageDataUrl) {
+            isRequestPending = true;
+            try {
+                const resp = await fetch('/asl/api/predict/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageDataUrl })
+                });
+                const res = await resp.json();
+                if (res.status === 'success') {
+                    const pct = Math.round(res.confidence * 100);
+
+                    // If confidence is low (< 50%), show uncertain hint to prevent jumping
+                    if (res.confidence < 0.45) {
+                        document.getElementById('predictedLetter').innerText = '?';
+                        document.getElementById('predictedLetter').style.color = '#ffb703';
+                        document.getElementById('confidenceBadge').innerText = `Low Confidence (${pct}%)`;
+                        document.getElementById('confidenceBadge').style.background = '#fff3cd';
+                        document.getElementById('confidenceBadge').style.color = '#856404';
+                        document.getElementById('confidenceBar').style.width = pct + '%';
+                        document.getElementById('confidenceBar').className = 'progress-bar bg-warning';
+                        document.getElementById('statusHint').innerText = 'Uncertain gesture. Adjust hand inside the green square.';
+                        roiGuide.className = 'roi-guide low-conf';
+                    } else {
+                        document.getElementById('predictedLetter').innerText = res.predicted_class;
+                        document.getElementById('predictedLetter').style.color = '#007BFF';
+                        document.getElementById('confidenceBadge').innerText = `Detected: ${res.predicted_class} (${pct}%)`;
+                        document.getElementById('confidenceBadge').style.background = '#e7f5ea';
+                        document.getElementById('confidenceBadge').style.color = '#1b873f';
+                        document.getElementById('confidenceBar').style.width = pct + '%';
+                        document.getElementById('confidenceBar').className = 'progress-bar bg-success';
+                        document.getElementById('statusHint').innerText = `Recognized gesture for Letter "${res.predicted_class}".`;
+                        roiGuide.className = 'roi-guide detected';
+                    }
+
+                    if (res.top_predictions) {
+                        let html = '';
+                        res.top_predictions.forEach(c => {
+                            const cPct = Math.round(c.confidence * 100);
+                            html += `
+                                <div class="candidate-item">
+                                    <strong>Letter ${c.class}</strong>
+                                    <span class="badge ${cPct > 50 ? 'bg-primary' : 'bg-secondary'}">${cPct}%</span>
+                                </div>
+                            `;
+                        });
+                        document.getElementById('candidatesList').innerHTML = html;
+                    }
+                }
+            } catch (err) {
+                console.error('Prediction request error:', err);
+            } finally {
+                isRequestPending = false;
+            }
+        }
+
+        async function launchNativeOpenCV() {
+            try {
+                const resp = await fetch('/asl/api/launch-webcam/');
+                const res = await resp.json();
+                alert(res.message);
+            } catch (err) {
+                alert('Failed to launch OpenCV: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,68 +1,105 @@
 {% load static %}
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASL Grammar Guide</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SignMaster - Advanced ASL Grammar Guide</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
+    <style>
+        .grammar-card {
+            background: white;
+            border: 1px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
+            padding: 28px;
+            box-shadow: var(--sm-shadow-sm);
+            margin-bottom: 24px;
+            transition: all var(--sm-transition-smooth);
+        }
+        .grammar-card:hover {
+            box-shadow: var(--sm-shadow-md);
+            border-color: var(--sm-primary);
+        }
+        .grammar-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 480px;
+            object-fit: contain;
+            border-radius: var(--sm-radius-md);
+            margin: 16px auto 0 auto;
+            display: block;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-    <header class="bg-blue-600 text-white text-center p-6 shadow-lg">
-        <h1 class="text-4xl font-bold">ASL Grammar Guide</h1>
-        <p class="text-lg mt-2">Understanding American Sign Language Grammar</p>
-    </header>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Introduction</h2>
-        <p class="mt-2">One common misconception about American Sign Language (ASL) is that it is essentially signed English. However, like any other language, ASL has its own system of grammar that is integral to effective communication and understanding.</p>
-        <img src="{% static 'images/grammar/1.png' %}" alt="ASL Introduction" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Sentence Structure</h2>
-        <p class="mt-2">ASL commonly uses a type of sentence structure called topicalization...</p>
-        <img src="{% static 'images/grammar/2.png' %}" alt="Sentence Structure" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Non-Manual Markers</h2>
-        <p class="mt-2">In ASL, a non-manual marker (NMM) is an action that gives context or meaning to what is being signed...</p>
-        <img src="{% static 'images/grammar/3.png' %}" alt="Non-Manual Markers" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Signing Space</h2>
-        <p class="mt-2">The signing space is an important aspect of ASL that determines where and how signs are placed...</p>
-        <img src="{% static 'images/grammar/4.png' %}" alt="Signing Space" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Sign Movement</h2>
-        <p class="mt-2">Sign movement plays a crucial role in conveying meaning in ASL...</p>
-        <img src="{% static 'images/grammar/5.png' %}" alt="Sign Movement" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Handshape</h2>
-        <p class="mt-2">The shape of the hand while signing determines different meanings...</p>
-        <img src="{% static 'images/grammar/6.png' %}" alt="Handshape" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <section class="max-w-4xl mx-auto p-6 bg-white shadow-md mt-6 rounded-lg">
-        <h2 class="text-2xl font-semibold text-blue-600">Additional ASL Resources</h2>
-        <p class="mt-2">If you are looking for more ASL resources, check out the following:</p>
-        <ul class="list-disc list-inside mt-2">
-            <li><a href="https://www.handspeak.com" class="text-blue-500">Handspeak ASL Dictionary</a></li>
-            <li><a href="https://www.lifeprint.com" class="text-blue-500">ASL University</a></li>
-        </ul>
-        <img src="{% static 'images/grammar/7.png' %}" alt="ASL Resources" class="w-full mt-4 rounded-lg shadow">
-    </section>
-    
-    <footer class="bg-blue-600 text-white text-center p-4 mt-6">
-       
-    </footer>
+<body class="sm-page-bg">
+{% include 'partials/navbar.html' %}
+
+    <div class="container py-4" style="max-width: 960px;">
+        <div class="text-center mb-4">
+            <span class="sm-badge sm-badge-primary mb-2">Advanced Module</span>
+            <h2 class="fw-bold text-dark mb-1">ASL Grammar & Fluency Guide</h2>
+            <p class="text-muted mb-0">Master topicalization, non-manual markers, 3D signing space, and spatial verb movements.</p>
+        </div>
+
+        <div class="grammar-card">
+            <h4 class="fw-bold text-primary mb-2"><i class="bi bi-info-circle me-2"></i>1. Introduction to ASL Linguistic Independence</h4>
+            <p class="text-secondary">
+                A common misconception is that ASL is simply English rendered through gestures. In reality, American Sign Language is an autonomous, complete natural language with distinct syntax, phonology (parameters), and morphology.
+            </p>
+            <img src="{% static 'images/grammar/1.png' %}" alt="ASL Introduction" class="grammar-img">
+        </div>
+
+        <div class="grammar-card">
+            <h4 class="fw-bold text-primary mb-2"><i class="bi bi-diagram-2 me-2"></i>2. Topicalization & Word Order</h4>
+            <p class="text-secondary">
+                ASL commonly places the topic (the object of interest) at the start of the clause, followed by an assertion about that topic.
+            </p>
+            <img src="{% static 'images/grammar/2.png' %}" alt="Sentence Structure" class="grammar-img">
+        </div>
+
+        <div class="grammar-card">
+            <h4 class="fw-bold text-primary mb-2"><i class="bi bi-emoji-sunglasses me-2"></i>3. Non-Manual Markers (NMM)</h4>
+            <p class="text-secondary">
+                Non-manual markers include eyebrow motion, mouth morphemes (e.g., 'cha', 'mm', 'th'), and shoulder shifts. They determine whether an utterance is a question, negation, conditional, or assertion.
+            </p>
+            <img src="{% static 'images/grammar/3.png' %}" alt="Non-Manual Markers" class="grammar-img">
+        </div>
+
+        <div class="grammar-card">
+            <h4 class="fw-bold text-primary mb-2"><i class="bi bi-bounding-box-circles me-2"></i>4. 3D Signing Space & Referent Loci</h4>
+            <p class="text-secondary">
+                Signers set up referents (people, places, concepts) in the physical space in front of them (loci) and direct verbs toward those loci without repeating names.
+            </p>
+            <img src="{% static 'images/grammar/4.png' %}" alt="Signing Space" class="grammar-img">
+        </div>
+
+        <div class="grammar-card">
+            <h4 class="fw-bold text-primary mb-2"><i class="bi bi-arrows-move me-2"></i>5. Directional & Spatial Verbs</h4>
+            <p class="text-secondary">
+                Directional verbs (such as GIVE, HELP, SHOW, ASK) alter their starting and ending points in space to indicate who did what to whom.
+            </p>
+            <img src="{% static 'images/grammar/5.png' %}" alt="Sign Movement" class="grammar-img">
+        </div>
+
+        <div class="grammar-card">
+            <h4 class="fw-bold text-primary mb-2"><i class="bi bi-stack me-2"></i>6. Classifiers & Depicting Signs</h4>
+            <p class="text-secondary">
+                Classifiers represent shape, size, location, and motion (e.g. CL:3 for land vehicles, CL:1 for people walking, CL:B for flat surfaces).
+            </p>
+            <img src="{% static 'images/grammar/6.png' %}" alt="ASL Summary" class="grammar-img">
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard' %}" class="sm-btn sm-btn-outline">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <a href="{% url 'asl_recognize' %}" class="sm-btn sm-btn-primary ms-2">
+                <span>Practice in ASL Vision &rarr;</span>
+            </a>
+        </div>
+    </div>
 </body>
 </html>

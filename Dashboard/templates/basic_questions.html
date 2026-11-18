@@ -4,22 +4,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Questions</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SignMaster - Basic ASL Questions (WH-Questions)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/signmaster-theme.css' %}">
+    <style>
+        .question-card {
+            background: white;
+            border: 1px solid var(--sm-border);
+            border-radius: var(--sm-radius-xl);
+            padding: 24px;
+            box-shadow: var(--sm-shadow-sm);
+            text-align: center;
+            transition: all var(--sm-transition-smooth);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .question-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--sm-shadow-lg);
+            border-color: var(--sm-primary);
+        }
+        .question-img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin: 0 auto 16px auto;
+            border-radius: var(--sm-radius-md);
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div class="max-w-5xl mx-auto p-6">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Basic Questions</h1>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<body class="sm-page-bg">
+{% include 'partials/navbar.html' %}
+
+    <div class="container py-4" style="max-width: 1080px;">
+        <div class="text-center mb-4">
+            <span class="sm-badge sm-badge-warning mb-2">Beginner Module</span>
+            <h2 class="fw-bold text-dark mb-1">Essential Questions in ASL</h2>
+            <p class="text-muted mb-0">Learn WH-question handshapes, furrowed eyebrow non-manual markers, and conversational signs.</p>
+        </div>
+
+        <div class="row g-4">
             {% for question, description in questions.items %}
-            <div class="bg-white rounded-lg shadow-lg p-6 transform transition duration-300 hover:scale-105">
-                <img src="{% static 'images/qus/' %}{{ question|capfirst }}.png" 
-                     alt="{{ question }}" 
-                     class="w-24 h-24 mx-auto mb-4">
-                <h2 class="text-xl font-semibold text-gray-700 text-center">{{ question }}?</h2>
-                <p class="text-gray-600 text-sm text-center mt-2">{{ description }}</p>
+            <div class="col-md-6 col-lg-4">
+                <div class="question-card">
+                    <div>
+                        <img src="{% static 'images/qus/' %}{{ question|capfirst }}.png" 
+                             alt="{{ question }}" 
+                             class="question-img"
+                             onerror="this.src='{% static 'images/logo_signMaster.png' %}'">
+                        <h4 class="fw-bold text-dark mb-2">{{ question|capfirst }}?</h4>
+                        <p class="text-muted small mb-0">{{ description }}</p>
+                    </div>
+                </div>
             </div>
             {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard' %}" class="sm-btn sm-btn-outline">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <a href="{% url 'asl_recognize' %}" class="sm-btn sm-btn-primary ms-2">
+                <span>Practice in ASL Vision &rarr;</span>
+            </a>
         </div>
     </div>
 </body>
