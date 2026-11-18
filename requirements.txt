@@ -18,7 +18,7 @@ requests>=2.30.0
 
 # Audio & Speech (Existing Features)
 SpeechRecognition>=3.10.0
-pyaudio>=0.2.13
+
 
 dj-database-url
 psycopg2-binary
